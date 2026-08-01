@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ruang SPBU 4450127</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+<!-- ======================================================================
+     KONFIGURASI FIREBASE — WAJIB DIISI SEBELUM DIPAKAI
+     Cara mendapatkan nilai ini ada di panduan yang menyertai file ini.
+     Setelah diisi, seluruh tim yang membuka file/link ini akan berbagi
+     data yang sama secara realtime, permanen, dan tidak tergantung Claude.
+====================================================================== -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyATEGRvzjahrARt7A-YEf8H8gnck7xwZLA",
+    authDomain: "groub-spbu-4450127.firebaseapp.com",
+    databaseURL: "https://groub-spbu-4450127-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "groub-spbu-4450127",
+    storageBucket: "groub-spbu-4450127.firebasestorage.app",
+    messagingSenderId: "864910759798",
+    appId: "1:864910759798:web:44dc643c11d0dc15f60c57"
+  };
+</script>
+<style>
+  :root{
+    --merah:#E4002B; --merah-tua:#A5001F;
+    --hijau:#00843D; --hijau-tua:#00622D;
+    --biru:#003D79; --biru-tua:#002850;
+    --krem:#FBF8F3; --kertas:#FFFFFF;
+    --tinta:#1B2430; --tinta-lembut:#5B6472;
+    --garis:#E4E1D8; --sukses-bg:#EAF7EF;
+    --kuning-bg:#FFF6E0; --kuning:#B9740A;
+    --shadow: 0 20px 60px -20px rgba(0,61,121,.25);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 90% -10%, rgba(0,132,61,.08), transparent 60%),
+      radial-gradient(1000px 500px at -10% 0%, rgba(228,0,43,.07), transparent 55%),
+      var(--krem);
+    font-family:'Inter',sans-serif; color:var(--tinta);
+    min-height:100vh;
+  }
+  button{font-family:inherit;}
+  input,textarea,select{font-family:inherit;}
+
+  /* ===== LAYAR PROFIL ===== */
+  #layarProfil{
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .kartu-profil{
+    width:100%; max-width:400px; background:#fff; border-radius:22px; box-shadow:var(--shadow);
+    border:1px solid var(--garis); overflow:hidden;
+  }
+  .kartu-profil .kop-mini{
+    background:linear-gradient(120deg, var(--biru-tua), var(--biru) 45%, var(--hijau) 78%, var(--merah) 100%);
+    padding:28px 26px 22px; color:#fff; text-align:center;
+  }
+  .kop-mini .lambang{
+    width:50px; height:50px; border-radius:14px; background:#fff; margin:0 auto 12px;
+    display:flex; align-items:center; justify-content:center; box-shadow:0 6px 16px rgba(0,0,0,.2);
+  }
+  .kop-mini .lambang svg{width:30px; height:30px;}
+  .kop-mini h1{margin:0; font-family:'Space Grotesk',sans-serif; font-size:19px; font-weight:700;}
+  .kop-mini p{margin:6px 0 0; font-size:12px; opacity:.85;}
+  .isi-profil{padding:26px;}
+  .field{margin-bottom:16px;}
+  .field label{display:block; font-size:11.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--tinta-lembut); font-weight:700; margin-bottom:6px;}
+  .field input, .field select{
+    width:100%; padding:11px 13px; border:1.4px solid var(--garis); border-radius:10px;
+    font-size:14px; outline:none; background:#FCFCFA; transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .field input:focus, .field select:focus{border-color:var(--biru); box-shadow:0 0 0 3px rgba(0,61,121,.12); background:#fff;}
+  .pilihan-peran{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .chip-peran{
+    border:1.4px solid var(--garis); border-radius:10px; padding:10px; text-align:center; cursor:pointer;
+    font-size:12.5px; font-weight:600; color:var(--tinta-lembut); transition:all .15s ease; user-select:none;
+  }
+  .chip-peran.aktif{border-color:var(--hijau); background:var(--sukses-bg); color:var(--hijau-tua);}
+  .btn-masuk{
+    width:100%; padding:13px; border:none; border-radius:11px; background:var(--biru); color:#fff;
+    font-size:14px; font-weight:700; cursor:pointer; margin-top:6px; transition:opacity .15s ease;
+  }
+  .btn-masuk:hover{opacity:.92;}
+  .catatan-profil{font-size:11.5px; color:var(--tinta-lembut); text-align:center; margin-top:14px; line-height:1.5;}
+
+  /* ===== APLIKASI ===== */
+  #app{display:none; max-width:920px; margin:0 auto; min-height:100vh; flex-direction:column;}
+  #app.aktif{display:flex;}
+
+  .header-app{
+    background:linear-gradient(120deg, var(--biru-tua) 0%, var(--biru) 45%, var(--hijau) 78%, var(--merah) 100%);
+    color:#fff; padding:18px 22px; position:relative; overflow:hidden;
+  }
+  .header-app::after{
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background:repeating-linear-gradient(115deg, rgba(255,255,255,.06) 0 2px, transparent 2px 34px);
+  }
+  .header-baris{display:flex; justify-content:space-between; align-items:center; position:relative; z-index:1; gap:10px;}
+  .header-brand{display:flex; align-items:center; gap:10px;}
+  .header-brand .lambang{width:38px; height:38px; border-radius:10px; background:#fff; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .header-brand .lambang svg{width:22px; height:22px;}
+  .header-brand .teks .eyebrow{font-size:10px; letter-spacing:.14em; text-transform:uppercase; opacity:.8; font-weight:600;}
+  .header-brand .teks h1{margin:1px 0 0; font-family:'Space Grotesk',sans-serif; font-size:16.5px; font-weight:700;}
+  .profil-mini{display:flex; align-items:center; gap:8px; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.3); border-radius:999px; padding:5px 12px 5px 5px; cursor:pointer;}
+  .avatar{width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; flex-shrink:0;}
+  .profil-mini .nm{font-size:12px; font-weight:600; line-height:1.2;}
+  .profil-mini .rl{font-size:9.5px; opacity:.8; line-height:1.2;}
+
+  .status-koneksi{
+    position:relative; z-index:1; margin-top:12px; display:inline-flex; align-items:center; gap:6px;
+    font-size:11px; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.3);
+    padding:5px 11px; border-radius:999px;
+  }
+  .status-koneksi .titik{width:6px; height:6px; border-radius:50%; background:#5CE596;}
+  .status-koneksi.offline .titik{background:#FFC94D;}
+
+  /* ===== TAB NAV ===== */
+  .tab-nav{
+    display:flex; background:#fff; border-bottom:1px solid var(--garis); position:sticky; top:0; z-index:5;
+    overflow-x:auto;
+  }
+  .tab-btn{
+    flex:1; min-width:110px; padding:13px 8px; border:none; background:transparent; cursor:pointer;
+    font-size:12.5px; font-weight:600; color:var(--tinta-lembut);
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    border-bottom:2.5px solid transparent; transition:all .15s ease;
+  }
+  .tab-btn .ikon{font-size:16px;}
+  .tab-btn.aktif{color:var(--biru); border-bottom-color:var(--biru); background:#F4F8FC;}
+
+  .konten{flex:1; background:var(--krem); padding:18px 16px 100px;}
+  .panel{display:none;}
+  .panel.aktif{display:block;}
+
+  .kartu-kosong{
+    text-align:center; padding:40px 20px; color:var(--tinta-lembut); font-size:13px;
+    background:#fff; border-radius:16px; border:1px dashed var(--garis);
+  }
+  .kartu-kosong .ic{font-size:30px; display:block; margin-bottom:10px;}
+
+  /* ===== PENGUMUMAN ===== */
+  .kartu-pengumuman{
+    background:#fff; border-radius:16px; border:1px solid var(--garis); padding:16px 18px; margin-bottom:12px;
+    box-shadow:0 6px 18px -12px rgba(0,0,0,.12);
+  }
+  .kartu-pengumuman.penting{border-color:#F0C77A; background:var(--kuning-bg);}
+  .peng-atas{display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap;}
+  .lencana{font-size:10px; font-weight:700; padding:3px 9px; border-radius:999px; text-transform:uppercase; letter-spacing:.04em;}
+  .lencana.penting{background:#F0C77A; color:#5C3E00;}
+  .lencana.info{background:#DCEFE3; color:var(--hijau-tua);}
+  .lencana.pengawas{background:#DCE7F5; color:var(--biru-tua);}
+  .peng-judul{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14.5px; margin:6px 0 6px;}
+  .peng-isi{font-size:13.5px; line-height:1.6; color:var(--tinta); white-space:pre-wrap;}
+  .peng-meta{margin-top:10px; display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--tinta-lembut);}
+  .btn-hapus-kecil{background:none; border:none; color:var(--tinta-lembut); cursor:pointer; font-size:11px; text-decoration:underline;}
+  .btn-hapus-kecil:hover{color:var(--merah);}
+
+  /* ===== FORM KOMPOSER ===== */
+  .komposer{
+    background:#fff; border:1px solid var(--garis); border-radius:16px; padding:14px; margin-bottom:16px;
+  }
+  .komposer textarea, .komposer input[type=text]{
+    width:100%; border:1.4px solid var(--garis); border-radius:10px; padding:10px 12px; font-size:13.5px;
+    outline:none; resize:vertical; min-height:38px; background:#FCFCFA;
+  }
+  .komposer textarea:focus, .komposer input:focus{border-color:var(--biru); box-shadow:0 0 0 3px rgba(0,61,121,.1); background:#fff;}
+  .komposer-baris{display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; align-items:center;}
+  .komposer-baris select{border:1.4px solid var(--garis); border-radius:9px; padding:8px 10px; font-size:12.5px; background:#FCFCFA; outline:none;}
+  .btn-kirim{
+    margin-left:auto; background:var(--biru); color:#fff; border:none; border-radius:9px; padding:9px 18px;
+    font-size:12.5px; font-weight:700; cursor:pointer; transition:opacity .15s ease;
+  }
+  .btn-kirim:hover{opacity:.92;}
+  .btn-kirim.hijau{background:var(--hijau);}
+  .toggle-penting{display:flex; align-items:center; gap:6px; font-size:12px; color:var(--tinta-lembut); cursor:pointer;}
+
+  /* ===== OBROLAN ===== */
+  .list-chat{display:flex; flex-direction:column; gap:10px; margin-bottom:14px;}
+  .bubble-row{display:flex; gap:9px; align-items:flex-end;}
+  .bubble-row.saya{flex-direction:row-reverse;}
+  .bubble{
+    max-width:75%; background:#fff; border:1px solid var(--garis); border-radius:14px 14px 14px 4px;
+    padding:9px 13px; box-shadow:0 4px 14px -10px rgba(0,0,0,.15);
+  }
+  .bubble-row.saya .bubble{background:var(--biru); color:#fff; border-color:var(--biru); border-radius:14px 14px 4px 14px;}
+  .bubble .nm{font-size:11px; font-weight:700; margin-bottom:3px; color:var(--biru);}
+  .bubble-row.saya .bubble .nm{color:#BFD8F5;}
+  .bubble .tx{font-size:13.5px; line-height:1.5; white-space:pre-wrap; word-break:break-word;}
+  .bubble .jam{font-size:9.5px; opacity:.6; margin-top:4px; text-align:right;}
+  .chat-input-bar{
+    position:sticky; bottom:0; display:flex; gap:8px; background:#fff; border:1px solid var(--garis);
+    border-radius:14px; padding:8px; box-shadow:0 -6px 20px -14px rgba(0,0,0,.2);
+  }
+  .chat-input-bar input{flex:1; border:none; outline:none; padding:9px 10px; font-size:13.5px; background:transparent;}
+  .chat-input-bar button{
+    background:var(--hijau); color:#fff; border:none; border-radius:10px; padding:0 18px; font-weight:700;
+    font-size:13px; cursor:pointer;
+  }
+
+  /* ===== TANYA JAWAB ===== */
+  .kartu-pertanyaan{background:#fff; border:1px solid var(--garis); border-radius:16px; margin-bottom:12px; overflow:hidden;}
+  .pertanyaan-atas{padding:14px 16px; cursor:pointer;}
+  .pertanyaan-atas .tag{display:inline-block; font-size:10px; font-weight:700; color:var(--merah); background:#FDECEC; padding:3px 9px; border-radius:999px; margin-bottom:7px;}
+  .pertanyaan-judul{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; margin:0 0 5px;}
+  .pertanyaan-meta{font-size:11px; color:var(--tinta-lembut); display:flex; justify-content:space-between; align-items:center;}
+  .jumlah-jawaban{font-weight:600; color:var(--hijau-tua);}
+  .daftar-jawaban{display:none; padding:0 16px 14px; border-top:1px solid var(--garis);}
+  .daftar-jawaban.terbuka{display:block;}
+  .item-jawaban{padding:10px 0; border-bottom:1px dashed var(--garis); font-size:13px;}
+  .item-jawaban:last-of-type{border-bottom:none;}
+  .item-jawaban .nm{font-weight:700; font-size:11.5px; color:var(--biru); margin-bottom:2px;}
+  .form-jawab{display:flex; gap:8px; margin-top:10px;}
+  .form-jawab input{flex:1; border:1.4px solid var(--garis); border-radius:9px; padding:8px 10px; font-size:12.5px; outline:none;}
+  .form-jawab button{background:var(--biru); color:#fff; border:none; border-radius:9px; padding:0 14px; font-size:12px; font-weight:700; cursor:pointer;}
+
+  /* ===== MEDIA INFORMASI ===== */
+  .grid-media{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .kartu-media{background:#fff; border:1px solid var(--garis); border-radius:14px; overflow:hidden;}
+  .kartu-media img{width:100%; height:110px; object-fit:cover; display:block; background:#eee;}
+  .kartu-media .isi-media{padding:11px 12px;}
+  .kartu-media .kategori{font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--hijau-tua); background:var(--sukses-bg); display:inline-block; padding:2px 8px; border-radius:999px; margin-bottom:6px;}
+  .kartu-media .judul-media{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13px; margin:0 0 4px;}
+  .kartu-media .ket-media{font-size:11.5px; color:var(--tinta-lembut); line-height:1.4; margin-bottom:6px;}
+  .kartu-media a.tautan{font-size:11.5px; color:var(--biru); font-weight:600; text-decoration:none;}
+  .kartu-media a.tautan:hover{text-decoration:underline;}
+  .kartu-media .meta-media{font-size:10px; color:#9AA1AB; margin-top:6px;}
+
+  /* ===== FAB TAMBAH (mobile) ===== */
+  .fab-tambah{
+    display:none; position:fixed; right:18px; bottom:18px; width:52px; height:52px; border-radius:50%;
+    background:var(--merah); color:#fff; border:none; font-size:24px; cursor:pointer; box-shadow:0 10px 24px -8px rgba(228,0,43,.5);
+    z-index:20;
+  }
+
+  .footer-app{
+    text-align:center; padding:20px 20px 26px; font-size:11px; color:var(--tinta-lembut); background:#fff; border-top:1px solid var(--garis);
+  }
+  .footer-app .garis-tema{height:4px; width:64px; margin:0 auto 12px; border-radius:4px; background:linear-gradient(90deg, var(--merah), var(--hijau), var(--biru));}
+  .footer-app b{color:var(--tinta);}
+
+  @media (max-width:640px){
+    .grid-media{grid-template-columns:1fr;}
+    .tab-btn{font-size:11px; min-width:90px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ LAYAR PROFIL ============ -->
+<div id="layarProfil">
+  <div class="kartu-profil">
+    <div class="kop-mini">
+      <div class="lambang">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M12 2C12 2 6 8.5 6 14a6 6 0 0 0 12 0c0-5.5-6-12-6-12Z" fill="#E4002B"/>
+          <path d="M12 6C12 6 8.5 10.5 8.5 14.2A3.5 3.5 0 0 0 12 17.7 3.5 3.5 0 0 0 15.5 14.2C15.5 10.5 12 6 12 6Z" fill="#00843D"/>
+          <path d="M12 10c0 0-2 2.6-2 4.4a2 2 0 0 0 4 0c0-1.8-2-4.4-2-4.4Z" fill="#003D79"/>
+        </svg>
+      </div>
+      <h1>Ruang SPBU 4450127</h1>
+      <p>Obrolan · Tanya Jawab · Pengumuman · Media Informasi</p>
+    </div>
+    <div id="banderolBelumSetup" style="display:none; background:#FFF6E0; border-bottom:1px solid #F0C77A; color:#5C3E00; font-size:12px; padding:12px 20px; line-height:1.6;">
+      ⚠️ <b>Firebase belum dikonfigurasi.</b> Buka file ini dengan editor teks, isi bagian <code>firebaseConfig</code> di paling atas dengan data dari project Firebase Anda, lalu simpan ulang. Lihat panduan yang menyertai file ini.
+    </div>
+    <div class="isi-profil">
+      <div class="field">
+        <label>Nama Anda</label>
+        <input type="text" id="masukNama" placeholder="Contoh: Budi Santoso" maxlength="30">
+      </div>
+      <div class="field">
+        <label>Peran</label>
+        <div class="pilihan-peran" id="pilihanPeran">
+          <div class="chip-peran" data-peran="Pengawas">👮 Pengawas</div>
+          <div class="chip-peran" data-peran="Operator">⛽ Operator</div>
+          <div class="chip-peran" data-peran="Admin">🗂️ Admin</div>
+          <div class="chip-peran" data-peran="Petugas">🧑‍🔧 Petugas</div>
+        </div>
+      </div>
+      <button class="btn-masuk" id="btnMasuk">Masuk ke Ruang Tim</button>
+      <div class="catatan-profil">Nama &amp; peran hanya disimpan di perangkat ini untuk menandai pesan Anda.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ APLIKASI ============ -->
+<div id="app">
+  <div class="header-app">
+    <div class="header-baris">
+      <div class="header-brand">
+        <div class="lambang">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M12 2C12 2 6 8.5 6 14a6 6 0 0 0 12 0c0-5.5-6-12-6-12Z" fill="#E4002B"/>
+            <path d="M12 6C12 6 8.5 10.5 8.5 14.2A3.5 3.5 0 0 0 12 17.7 3.5 3.5 0 0 0 15.5 14.2C15.5 10.5 12 6 12 6Z" fill="#00843D"/>
+            <path d="M12 10c0 0-2 2.6-2 4.4a2 2 0 0 0 4 0c0-1.8-2-4.4-2-4.4Z" fill="#003D79"/>
+          </svg>
+        </div>
+        <div class="teks">
+          <div class="eyebrow">SPBU 44-501.27</div>
+          <h1>Ruang Tim</h1>
+        </div>
+      </div>
+      <div class="profil-mini" id="profilMini" title="Ganti profil">
+        <div class="avatar" id="avatarSaya">-</div>
+        <div>
+          <div class="nm" id="namaSayaTampil">-</div>
+          <div class="rl" id="peranSayaTampil">-</div>
+        </div>
+      </div>
+    </div>
+    <div class="status-koneksi" id="statusKoneksi"><span class="titik"></span><span id="statusTeksKoneksi">Menyambungkan…</span></div>
+  </div>
+
+  <div class="tab-nav">
+    <button class="tab-btn aktif" data-tab="pengumuman"><span class="ikon">📢</span>Pengumuman</button>
+    <button class="tab-btn" data-tab="obrolan"><span class="ikon">💬</span>Obrolan</button>
+    <button class="tab-btn" data-tab="tanyajawab"><span class="ikon">❓</span>Tanya Jawab</button>
+    <button class="tab-btn" data-tab="media"><span class="ikon">🖼️</span>Media &amp; Info</button>
+  </div>
+
+  <div class="konten">
+
+    <!-- PANEL PENGUMUMAN -->
+    <div class="panel aktif" id="panel-pengumuman">
+      <div class="komposer">
+        <input type="text" id="peJudul" placeholder="Judul pengumuman">
+        <br><br>
+        <textarea id="peIsi" placeholder="Tulis isi pengumuman untuk tim…" rows="3"></textarea>
+        <div class="komposer-baris">
+          <label class="toggle-penting"><input type="checkbox" id="pePenting"> Tandai penting</label>
+          <button class="btn-kirim" id="btnKirimPengumuman">Terbitkan</button>
+        </div>
+      </div>
+      <div id="listPengumuman"></div>
+    </div>
+
+    <!-- PANEL OBROLAN -->
+    <div class="panel" id="panel-obrolan">
+      <div class="list-chat" id="listChat"></div>
+      <div class="chat-input-bar">
+        <input type="text" id="inputChat" placeholder="Tulis pesan ke tim…" maxlength="500">
+        <button id="btnKirimChat">Kirim</button>
+      </div>
+    </div>
+
+    <!-- PANEL TANYA JAWAB -->
+    <div class="panel" id="panel-tanyajawab">
+      <div class="komposer">
+        <input type="text" id="tjJudul" placeholder="Tulis pertanyaan Anda…">
+        <div class="komposer-baris">
+          <button class="btn-kirim hijau" id="btnKirimTanya">Ajukan Pertanyaan</button>
+        </div>
+      </div>
+      <div id="listTanya"></div>
+    </div>
+
+    <!-- PANEL MEDIA & INFORMASI -->
+    <div class="panel" id="panel-media">
+      <div class="komposer">
+        <input type="text" id="mdJudul" placeholder="Judul (contoh: SOP Penerimaan BBM)">
+        <br><br>
+        <textarea id="mdKet" placeholder="Keterangan singkat…" rows="2"></textarea>
+        <br><br>
+        <input type="text" id="mdUrl" placeholder="Tautan gambar/dokumen (opsional, https://…)">
+        <div class="komposer-baris">
+          <select id="mdKategori">
+            <option>Foto</option>
+            <option>SOP</option>
+            <option>Dokumen</option>
+            <option>Info Harga</option>
+            <option>Lainnya</option>
+          </select>
+          <button class="btn-kirim" id="btnKirimMedia">Bagikan</button>
+        </div>
+      </div>
+      <div class="grid-media" id="listMedia"></div>
+    </div>
+
+  </div>
+
+  <div class="footer-app">
+    <div class="garis-tema"></div>
+    Ruang Tim SPBU 4450127 · Data dibagikan ke semua anggota yang membuka ruang ini<br>
+    <b>Support by Wahyono Mediatech</b>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ---------- LAPISAN PENYIMPANAN (Firebase Realtime Database) ----------
+  const konfigBelumDiisi = Object.values(firebaseConfig).some(v => String(v).startsWith('GANTI_DENGAN'));
+  let db = null;
+  if(!konfigBelumDiisi){
+    try{
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.database();
+    }catch(e){ console.error('Gagal inisialisasi Firebase', e); }
+  }
+
+  // Profil (nama & peran) disimpan lokal di perangkat masing-masing.
+  function simpanProfilLokal(p){
+    try{ localStorage.setItem('profilSpbu', JSON.stringify(p)); }catch(e){}
+  }
+  function ambilProfilLokal(){
+    try{ const v = localStorage.getItem('profilSpbu'); return v ? JSON.parse(v) : null; }catch(e){ return null; }
+  }
+
+  // ---------- PROFIL ----------
+  const $ = (sel)=> document.querySelector(sel);
+  const $$ = (sel)=> Array.from(document.querySelectorAll(sel));
+
+  let profil = null;
+  let peranTerpilih = 'Operator';
+
+  $$('.chip-peran').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      $$('.chip-peran').forEach(c=> c.classList.remove('aktif'));
+      chip.classList.add('aktif');
+      peranTerpilih = chip.dataset.peran;
+    });
+  });
+  $('.chip-peran[data-peran="Operator"]').classList.add('aktif');
+
+  function warnaDariNama(nama){
+    const warna = ['#003D79','#00843D','#E4002B','#7A4FBF','#B9740A','#00707A'];
+    let h = 0;
+    for(let i=0;i<nama.length;i++) h = nama.charCodeAt(i) + ((h<<5)-h);
+    return warna[Math.abs(h) % warna.length];
+  }
+  function inisial(nama){
+    return nama.trim().split(/\s+/).slice(0,2).map(s=>s[0]).join('').toUpperCase();
+  }
+  function waktuRelatif(ts){
+    const detik = Math.floor((Date.now()-ts)/1000);
+    if(detik < 60) return 'baru saja';
+    if(detik < 3600) return Math.floor(detik/60) + ' menit lalu';
+    if(detik < 86400) return Math.floor(detik/3600) + ' jam lalu';
+    const d = new Date(ts);
+    return d.toLocaleString('id-ID', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'});
+  }
+  function escapeHtml(s){
+    return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function terapkanProfil(p){
+    profil = p;
+    $('#avatarSaya').textContent = inisial(p.nama);
+    $('#avatarSaya').style.background = warnaDariNama(p.nama);
+    $('#namaSayaTampil').textContent = p.nama;
+    $('#peranSayaTampil').textContent = p.peran;
+    $('#layarProfil').style.display = 'none';
+    $('#app').classList.add('aktif');
+    simpanProfilLokal(p);
+    mulaiAplikasi();
+  }
+
+  $('#btnMasuk').addEventListener('click', ()=>{
+    const nama = $('#masukNama').value.trim();
+    if(!nama){ $('#masukNama').focus(); return; }
+    terapkanProfil({nama, peran: peranTerpilih});
+  });
+  $('#masukNama').addEventListener('keydown', (e)=>{ if(e.key==='Enter') $('#btnMasuk').click(); });
+
+  $('#profilMini').addEventListener('click', ()=>{
+    if(!confirm('Keluar dan ganti profil?')) return;
+    $('#app').classList.remove('aktif');
+    $('#layarProfil').style.display = 'flex';
+  });
+
+  // ---------- STATUS KONEKSI ----------
+  const statusEl = $('#statusKoneksi');
+  const statusTeks = $('#statusTeksKoneksi');
+  if(konfigBelumDiisi){
+    $('#banderolBelumSetup').style.display = 'block';
+    statusEl.classList.add('offline');
+    statusTeks.textContent = 'Firebase belum dikonfigurasi';
+  } else if(db){
+    db.ref('.info/connected').on('value', (snap)=>{
+      if(snap.val() === true){
+        statusEl.classList.remove('offline');
+        statusTeks.textContent = 'Tersambung — data dibagikan ke tim, realtime';
+      } else {
+        statusEl.classList.add('offline');
+        statusTeks.textContent = 'Menyambungkan kembali…';
+      }
+    });
+  }
+
+  // ---------- TAB NAV ----------
+  $$('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      $$('.tab-btn').forEach(b=> b.classList.remove('aktif'));
+      $$('.panel').forEach(p=> p.classList.remove('aktif'));
+      btn.classList.add('aktif');
+      $('#panel-' + btn.dataset.tab).classList.add('aktif');
+    });
+  });
+
+  // Ubah objek Firebase {id: {...}} menjadi array terurut berdasarkan waktu
+  function keArray(obj){
+    if(!obj) return [];
+    return Object.entries(obj).map(([id, v])=> ({id, ...v})).sort((a,b)=> a.waktu - b.waktu);
+  }
+
+  // ================= PENGUMUMAN =================
+  function renderPengumuman(list){
+    const wadah = $('#listPengumuman');
+    if(list.length === 0){
+      wadah.innerHTML = `<div class="kartu-kosong"><span class="ic">📢</span>Belum ada pengumuman. Jadilah yang pertama membagikan info penting.</div>`;
+      return;
+    }
+    wadah.innerHTML = list.slice().reverse().map(item=>`
+      <div class="kartu-pengumuman ${item.penting ? 'penting':''}">
+        <div class="peng-atas">
+          ${item.penting ? '<span class="lencana penting">Penting</span>' : '<span class="lencana info">Info</span>'}
+          ${item.peran === 'Pengawas' ? '<span class="lencana pengawas">Pengawas</span>' : ''}
+        </div>
+        <div class="peng-judul">${escapeHtml(item.judul)}</div>
+        <div class="peng-isi">${escapeHtml(item.isi)}</div>
+        <div class="peng-meta">
+          <span>${escapeHtml(item.nama)} · ${waktuRelatif(item.waktu)}</span>
+          ${(profil && item.nama === profil.nama) ? `<button class="btn-hapus-kecil" data-id="${item.id}" data-jenis="pengumuman">Hapus</button>` : ''}
+        </div>
+      </div>`).join('');
+  }
+
+  $('#btnKirimPengumuman').addEventListener('click', ()=>{
+    const judul = $('#peJudul').value.trim();
+    const isi = $('#peIsi').value.trim();
+    if(!judul || !isi || !db) return;
+    db.ref('pengumuman').push({judul, isi, penting: $('#pePenting').checked, nama: profil.nama, peran: profil.peran, waktu: Date.now()});
+    $('#peJudul').value=''; $('#peIsi').value=''; $('#pePenting').checked=false;
+  });
+
+  $('#listPengumuman').addEventListener('click', (e)=>{
+    const tombol = e.target.closest('[data-jenis="pengumuman"]');
+    if(!tombol || !db) return;
+    db.ref('pengumuman/'+tombol.dataset.id).remove();
+  });
+
+  // ================= OBROLAN =================
+  function renderChat(list){
+    const wadah = $('#listChat');
+    if(list.length === 0){
+      wadah.innerHTML = `<div class="kartu-kosong"><span class="ic">💬</span>Belum ada obrolan. Sapa tim Anda!</div>`;
+      return;
+    }
+    const terbaru = list.slice(-300);
+    wadah.innerHTML = terbaru.map(m=>{
+      const saya = profil && m.nama === profil.nama;
+      return `<div class="bubble-row ${saya?'saya':''}">
+        <div class="avatar" style="width:28px;height:28px;font-size:10px;background:${warnaDariNama(m.nama)}">${inisial(m.nama)}</div>
+        <div class="bubble">
+          ${!saya ? `<div class="nm">${escapeHtml(m.nama)}</div>` : ''}
+          <div class="tx">${escapeHtml(m.teks)}</div>
+          <div class="jam">${waktuRelatif(m.waktu)}</div>
+        </div>
+      </div>`;
+    }).join('');
+    wadah.scrollIntoView({block:'end'});
+  }
+
+  function kirimChat(){
+    const teks = $('#inputChat').value.trim();
+    if(!teks || !db) return;
+    db.ref('obrolan').push({nama: profil.nama, teks, waktu: Date.now()});
+    $('#inputChat').value='';
+  }
+  $('#btnKirimChat').addEventListener('click', kirimChat);
+  $('#inputChat').addEventListener('keydown', (e)=>{ if(e.key==='Enter') kirimChat(); });
+
+  // ================= TANYA JAWAB =================
+  function renderTanya(list){
+    const wadah = $('#listTanya');
+    if(list.length === 0){
+      wadah.innerHTML = `<div class="kartu-kosong"><span class="ic">❓</span>Belum ada pertanyaan. Ada yang ingin ditanyakan ke tim?</div>`;
+      return;
+    }
+    wadah.innerHTML = list.slice().reverse().map(q=>{
+      const jawaban = keArray(q.jawaban);
+      return `
+      <div class="kartu-pertanyaan" data-id="${q.id}">
+        <div class="pertanyaan-atas" data-toggle="${q.id}">
+          <span class="tag">Pertanyaan</span>
+          <div class="pertanyaan-judul">${escapeHtml(q.judul)}</div>
+          <div class="pertanyaan-meta">
+            <span>${escapeHtml(q.nama)} · ${waktuRelatif(q.waktu)}</span>
+            <span class="jumlah-jawaban">${jawaban.length} jawaban</span>
+          </div>
+        </div>
+        <div class="daftar-jawaban" id="jawaban-${q.id}">
+          ${jawaban.map(a=>`<div class="item-jawaban"><div class="nm">${escapeHtml(a.nama)} · ${waktuRelatif(a.waktu)}</div>${escapeHtml(a.teks)}</div>`).join('') || '<div style="padding:10px 0;font-size:12.5px;color:var(--tinta-lembut)">Belum ada jawaban.</div>'}
+          <div class="form-jawab">
+            <input type="text" placeholder="Tulis jawaban…" data-jawab-input="${q.id}">
+            <button data-jawab-kirim="${q.id}">Jawab</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  $('#btnKirimTanya').addEventListener('click', ()=>{
+    const judul = $('#tjJudul').value.trim();
+    if(!judul || !db) return;
+    db.ref('tanyajawab').push({judul, nama: profil.nama, waktu: Date.now()});
+    $('#tjJudul').value='';
+  });
+
+  $('#listTanya').addEventListener('click', (e)=>{
+    const idBuka = e.target.closest('[data-toggle]');
+    if(idBuka){
+      $('#jawaban-'+idBuka.dataset.toggle).classList.toggle('terbuka');
+      return;
+    }
+    const idJawab = e.target.closest('[data-jawab-kirim]');
+    if(idJawab && db){
+      const qid = idJawab.dataset.jawabKirim;
+      const input = $(`[data-jawab-input="${qid}"]`);
+      const teks = input.value.trim();
+      if(!teks) return;
+      db.ref('tanyajawab/'+qid+'/jawaban').push({nama: profil.nama, teks, waktu: Date.now()});
+      setTimeout(()=> { const el = $('#jawaban-'+qid); if(el) el.classList.add('terbuka'); }, 200);
+    }
+  });
+
+  // ================= MEDIA & INFORMASI =================
+  function tampakGambar(url){
+    return /\.(jpe?g|png|gif|webp)(\?.*)?$/i.test(url||'');
+  }
+  function renderMedia(list){
+    const wadah = $('#listMedia');
+    if(list.length === 0){
+      wadah.innerHTML = `<div class="kartu-kosong" style="grid-column:1/-1"><span class="ic">🖼️</span>Belum ada media atau dokumen dibagikan.</div>`;
+      return;
+    }
+    wadah.innerHTML = list.slice().reverse().map(m=>`
+      <div class="kartu-media">
+        ${ m.url && tampakGambar(m.url) ? `<img src="${escapeHtml(m.url)}" alt="${escapeHtml(m.judul)}" onerror="this.style.display='none'">` : '' }
+        <div class="isi-media">
+          <span class="kategori">${escapeHtml(m.kategori)}</span>
+          <div class="judul-media">${escapeHtml(m.judul)}</div>
+          ${m.keterangan ? `<div class="ket-media">${escapeHtml(m.keterangan)}</div>` : ''}
+          ${ m.url ? `<a class="tautan" href="${escapeHtml(m.url)}" target="_blank" rel="noopener">Buka tautan ↗</a>` : '' }
+          <div class="meta-media">${escapeHtml(m.nama)} · ${waktuRelatif(m.waktu)}</div>
+        </div>
+      </div>`).join('');
+  }
+
+  $('#btnKirimMedia').addEventListener('click', ()=>{
+    const judul = $('#mdJudul').value.trim();
+    if(!judul || !db) return;
+    db.ref('media').push({
+      judul,
+      keterangan: $('#mdKet').value.trim(),
+      url: $('#mdUrl').value.trim(),
+      kategori: $('#mdKategori').value,
+      nama: profil.nama, waktu: Date.now()
+    });
+    $('#mdJudul').value=''; $('#mdKet').value=''; $('#mdUrl').value='';
+  });
+
+  // ---------- MULAI: PASANG LISTENER REALTIME ----------
+  let listenerTerpasang = false;
+  function mulaiAplikasi(){
+    if(!db || listenerTerpasang) return;
+    listenerTerpasang = true;
+    db.ref('pengumuman').on('value', snap => renderPengumuman(keArray(snap.val())));
+    db.ref('obrolan').on('value', snap => renderChat(keArray(snap.val())));
+    db.ref('tanyajawab').on('value', snap => renderTanya(keArray(snap.val())));
+    db.ref('media').on('value', snap => renderMedia(keArray(snap.val())));
+  }
+
+  // ---------- COBA PULIHKAN PROFIL TERSIMPAN DI PERANGKAT INI ----------
+  (function initAwal(){
+    const p = ambilProfilLokal();
+    if(p && p.nama){
+      $('#masukNama').value = p.nama;
+      $$('.chip-peran').forEach(c=>{
+        c.classList.toggle('aktif', c.dataset.peran === p.peran);
+      });
+      peranTerpilih = p.peran;
+      terapkanProfil(p);
+    } else if(konfigBelumDiisi){
+      $('#banderolBelumSetup').style.display = 'block';
+    }
+  })();
+})();
+</script>
+
+</body>
+</html>
